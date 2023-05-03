@@ -1,0 +1,12 @@
+http:
+  routers:
+    apache:
+      rule: "Host(`nocturnalplay.tech`) && PathPrefix(`/`)"
+      service: apache
+      entryPoints:
+        - web
+  services:
+    apache:
+      loadBalancer:
+        servers:
+          - url: "http:172.19.0.2:15672"

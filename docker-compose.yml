@@ -1,0 +1,301 @@
+version: "3.7"
+
+services:
+
+  traefik:
+    image: "traefik"
+    hostname: traefik.youngstorage.tech
+    container_name: "traefik.youngstorage.tech"
+    networks:
+      default:
+        ipv4_address: 172.17.0.14
+    # command:
+    #   - --log.level=DEBUG
+    #   - --api.insecure=true
+    #   - --providers.docker=true
+    #   - --providers.docker.exposedbydefault=false
+    #   - --entrypoints.web.address=:80
+    #   - --entrypoints.web.http.redirections.entryPoint.to=websecure
+    #   - --entrypoints.web.http.redirections.entryPoint.scheme=https
+    #   - --entrypoints.web.http.redirections.entrypoint.permanent=true
+    #   - --entrypoints.websecure.address=:443
+    labels:
+      - traefik.domain=youngstorage.tech
+      - traefik.enable=true
+      - traefik.http.routers.traefik_route.rule=Host(`traefik.youngstorage.tech`)
+      - traefik.http.routers.traefik_route.service=svc_traefik_route
+      - traefik.http.routers.traefik_route.tls=true
+      - traefik.http.routers.traefik_route.entrypoints=websecure
+      #- traefik.http.middlewares.my-auth.basicauth.users=test:$$apr1$$H6uskkkW$$IgXLP6ewTrSuBkTrqE8wj/,test2:$$apr1$$d9hr9HBB$$4HxwgUir3HP4EsggP/QNo0
+      - traefik.http.routers.traefik_route.middlewares=test-auth@file
+      # - traefik.http.middlewares.dashboard_auth.basicauth.users=dashboard:$$2y$$05$$T/WVjQVqBc24NLUNI/xuVu0V2B.RPY50k2.CCH5JHGInb3EUeaDcO
+      - traefik.http.services.svc_traefik_route.loadbalancer.server.port=8080
+    volumes:
+      - ./tls.yml:/config/tls.yml
+      - ./traefik.yml:/etc/traefik/traefik.yml
+      - /home/cloud/traefik/certs2:/etc/certs2
+      # - config.yml:/etc/traefik/dynamic_conf/config.yml
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /home/cloud/traefik/certs:/etc/certs
+
+
+
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    restart: always
+    # volumes:
+    #   - "./letsencrypt:/letsencrypt"
+    #   - "/var/run/docker.sock:/var/run/docker.sock:ro"
+
+
+  anish:
+    hostname: youngstorage
+    container_name: "anish.youngstorage.in"
+    networks:
+      - default
+
+    image: "anish:latest"
+    cap_add:
+      - NET_ADMIN
+    
+    labels:
+      - "traefik.domain=youngstorage.in"
+      - "traefik.enable=true"
+      - "traefik.http.routers.code_anish.rule=Host(`anishcode.youngstorage.in`)"
+      - "traefik.http.routers.code_anish.service=svc_code_anish"
+      # - traefik.http.routers.code_anish.middlewares=test-auth@file
+      - traefik.http.routers.code_anish.tls=true
+      - traefik.http.routers.code_anish.entrypoints=websecure
+      - "traefik.http.services.svc_code_anish.loadbalancer.server.port=1111"
+
+      - "traefik.http.routers.apache_anish.rule=Host(`apacheanish.youngstorage.in`)"
+      - "traefik.http.routers.apache_anish.service=svc_apache_anish"
+      - "traefik.http.services.svc_apache_anish.loadbalancer.server.port=80"
+      - traefik.http.routers.apache_anish.tls=true
+      - traefik.http.routers.apache_anish.entrypoints=websecure
+      
+      - "traefik.http.routers.apache_ravi.rule=Host(`ravi.youngstorage.in`)"
+      - "traefik.http.routers.apache_ravi.service=svc_apache_ravi"
+      - "traefik.http.services.svc_apache_ravi.loadbalancer.server.port=80"
+      - traefik.http.routers.apache_ravi.tls=true
+      - traefik.http.routers.apache_ravi.entrypoints=websecure
+
+      - "traefik.http.routers.next_anish.rule=Host(`doctor.youngstorage.in`)"
+      - "traefik.http.routers.next_anish.service=svc_next_anish"
+      - traefik.http.routers.next_anish.tls=true
+      - traefik.http.routers.next_anish.entrypoints=websecure
+      - "traefik.http.services.svc_next_anish.loadbalancer.server.port=80"
+
+      - "traefik.http.routers.food_apache_php.rule=Host(`food.youngstorage.in`)"
+      - "traefik.http.routers.food_apache_php.service=svc_food_apache_php"
+      - "traefik.http.services.svc_food_apache_php.loadbalancer.server.port=80"
+      - traefik.http.routers.food_apache_php.tls=true
+      - traefik.http.routers.food_apache_php.entrypoints=websecure
+
+      - "traefik.http.routers.msdsilks.rule=Host(`msdsilks.youngstorage.in`)"
+      - "traefik.http.routers.msdsilks.service=svc_msdsilks"
+      - "traefik.http.services.svc_msdsilks.loadbalancer.server.port=8000"
+      - traefik.http.routers.msdsilks.tls=true
+      - traefik.http.routers.msdsilks.entrypoints=websecure
+
+      - "traefik.http.routers.anishred.rule=Host(`redanish.youngstorage.in`)"
+      - "traefik.http.routers.anishred.service=svc_anishred"
+      - "traefik.http.services.svc_anishred.loadbalancer.server.port=1880"
+      - traefik.http.routers.anishred.tls=true
+      - traefik.http.routers.anishred.entrypoints=websecure
+
+    volumes:
+      - anish:/home/anish/
+    # command: bash -c "service apache2 start"
+
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '1'
+          memory: 512M
+    restart: always
+
+
+  periyar:
+    hostname: youngstorage
+    networks:
+      - default
+    image: "periyar:latest"
+    cap_add:
+      - NET_ADMIN
+
+    
+    labels:
+      - "traefik.domain=youngstorage.in"
+      - "traefik.enable=true"
+      - "traefik.http.routers.periyar.rule=Host(`periyar.youngstorage.in`)"
+      - "traefik.http.routers.periyar.service=svc_periyar"
+      - traefik.http.routers.periyar.tls=true
+      - traefik.http.routers.periyar.entrypoints=websecure
+      - "traefik.http.services.svc_periyar.loadbalancer.server.port=3000"
+
+      - "traefik.http.routers.apache_periyar.rule=Host(`hackedperiyar.youngstorage.in`)"
+      - "traefik.http.routers.apache_periyar.service=svc_apache_periyar"
+      - "traefik.http.services.svc_apache_periyar.loadbalancer.server.port=80"
+      - traefik.http.routers.apache_periyar.tls=true
+
+      - "traefik.http.routers.code_periyar.rule=Host(`codeperiyar.youngstorage.in`)"
+      - "traefik.http.routers.code_periyar.service=svc_code_periyar"
+      - traefik.http.routers.code_periyar.tls=true
+      - traefik.http.routers.code_periyar.entrypoints=websecure
+      - "traefik.http.services.svc_code_periyar.loadbalancer.server.port=1111"
+
+      - "traefik.http.routers.order_apache_php.rule=Host(`order.youngstorage.in`)"
+      - "traefik.http.routers.order_apache_php.service=svc_order_apache_php"
+      - "traefik.http.services.svc_order_apache_php.loadbalancer.server.port=80"
+      - traefik.http.routers.order_apache_php.tls=true
+      - traefik.http.routers.order_apache_php.entrypoints=websecure
+
+      - "traefik.http.routers.dash.rule=Host(`dash.youngstorage.in`)"
+      - "traefik.http.routers.dash.service=svc_dash"
+      - "traefik.http.services.svc_dash.loadbalancer.server.port=80"
+      - traefik.http.routers.dash.tls=true
+      - traefik.http.routers.dash.entrypoints=websecure
+    
+    volumes:
+      - periyar_container:/home/periyar/
+    
+    restart: always
+  
+  phpcode:
+    hostname: "youngstorage"
+    networks:
+      - default
+
+    image: "php:latest"
+    cap_add:
+      - NET_ADMIN
+    container_name: php_code
+
+    labels:
+      - "traefik.domain=youngstorage.tech"
+      - "traefik.enable=true"
+      - "traefik.http.routers.php.rule=Host(`phpdev.youngstorage.tech`)"
+      - "traefik.http.routers.php.service=svc_php"
+      - traefik.http.routers.php.tls=true
+      - traefik.http.routers.php.entrypoints=websecure
+      - "traefik.http.services.svc_php.loadbalancer.server.port=8000"
+
+      - "traefik.http.routers.phpcode.rule=Host(`phpcode.youngstorage.tech`)"
+      - "traefik.http.routers.phpcode.service=svc_phpcode"
+      - "traefik.http.services.svc_phpcode.loadbalancer.server.port=1111"
+      - traefik.http.routers.phpcode.tls=true
+      - traefik.http.routers.phpcode.entrypoints=websecure
+
+      - "traefik.http.routers.next.rule=Host(`next.youngstorage.tech`)"
+      - "traefik.http.routers.next.service=svc_next"
+      - "traefik.http.services.svc_next.loadbalancer.server.port=3000"
+      - traefik.http.routers.next.tls=true
+      - traefik.http.routers.next.entrypoints=websecure
+
+      - "traefik.http.routers.apache_php.rule=Host(`apachephp.youngstorage.tech`)"
+      - "traefik.http.routers.apache_php.service=svc_apache_php"
+      - "traefik.http.services.svc_apache_php.loadbalancer.server.port=80"
+      - traefik.http.routers.apache_php.tls=true
+      - traefik.http.routers.apache_php.entrypoints=websecure
+
+      - "traefik.http.routers.grocery_apache_php.rule=Host(`grocery.youngstorage.tech`)"
+      - "traefik.http.routers.grocery_apache_php.service=svc_grocery_apache_php"
+      - "traefik.http.services.svc_grocery_apache_php.loadbalancer.server.port=80"
+      - traefik.http.routers.grocery_apache_php.tls=true
+      - traefik.http.routers.grocery_apache_php.entrypoints=websecure
+
+    # volumes:
+    #   - php_container:/home/php/
+  
+    restart: always
+
+
+# volumes:
+#   php_container:
+#     driver: local
+#     driver_opts:
+#        o: bind
+#        type: none
+#        device: /home/cloud/volume/php_container/
+
+#   periyar_container:
+#     driver: local
+#     driver_opts:
+#        o: bind
+#        type: none
+#        device: /home/cloud/volume/periyar_container/
+
+#   anish_container:
+#     driver: local
+#     driver_opts:
+#        o: bind
+#        type: none
+#        device: /home/cloud/volume/anish_container/
+  
+#   test_container:
+#     driver: local
+#     driver_opts:
+#        o: bind
+#        type: none
+#        device: /home/cloud/volume/test_container/
+
+  prithivi:
+    hostname: youngstorage
+    container_name: "prithivi.youngstorage.in"
+    networks:
+      - default
+
+    image: "prithivi:latest"
+    cap_add:
+      - NET_ADMIN
+    
+    labels:
+      - "traefik.domain=youngstorage.in"
+      - "traefik.enable=true"
+      - "traefik.http.routers.code_prithivi.rule=Host(`prithivicode.youngstorage.in`)"
+      - "traefik.http.routers.code_prithivi.service=svc_code_prithivi"
+      # - traefik.http.routers.code_prithivi.middlewares=test-auth@file
+      - traefik.http.routers.code_prithivi.tls=true
+      - traefik.http.routers.code_prithivi.entrypoints=websecure
+      - "traefik.http.services.svc_code_prithivi.loadbalancer.server.port=1111"
+
+      - "traefik.http.routers.prithiviapache.rule=Host(`prithiviapache.youngstorage.in`)"
+      - "traefik.http.routers.prithiviapache.service=svc_prithiviapache"
+      - "traefik.http.services.svc_prithiviapache.loadbalancer.server.port=80"
+      - traefik.http.routers.prithiviapache.tls=true
+      - traefik.http.routers.prithiviapache.entrypoints=websecure
+
+      - "traefik.http.routers.fastapi.rule=Host(`prithiviapi.youngstorage.in`)"
+      - "traefik.http.routers.fastapi.service=svc_fastapi"
+      - "traefik.http.services.svc_fastapi.loadbalancer.server.port=8000"
+      - traefik.http.routers.fastapi.tls=true
+      - traefik.http.routers.fastapi.entrypoints=websecure
+
+      - "traefik.http.routers.prinodered.rule=Host(`priprinodered.youngstorage.in`)"
+      - "traefik.http.routers.prinodered.service=svc_prinodered"
+      - "traefik.http.services.svc_prinodered.loadbalancer.server.port=1880"
+      - traefik.http.routers.prinodered.tls=true
+      - traefik.http.routers.prinodered.entrypoints=websecure
+
+    volumes:
+      - prithivi:/home/prithivi/
+    restart: always
+
+volumes:
+  anish:
+  anish_htdocs:
+  prithivi:
+  periyar_container:
+
+networks:
+  default:
+    name: service
+    external: true
+
+
